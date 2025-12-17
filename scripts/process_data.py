@@ -2,7 +2,7 @@
 Script de traitement automatique des données SIG
 - Charge les fichiers sources (Shapefile, GeoPackage, etc.)
 - Reprojette en WGS84
-- Simplifie les géométries
+- Simplifie les géométries (gère Polygon ET MultiPolygon)
 - Exporte en GeoJSON optimisé
 - Sauvegarde l'ancienne version avant écrasement
 """
@@ -112,6 +112,46 @@ def clean_attributes(gdf):
     return gdf
 
 
+# === FONCTION DE COMPTAGE DES VERTICES ===
+def count_vertices(geom):
+    """
+    Compte le nombre de vertices d'une géométrie
+    Gère Polygon, MultiPolygon, LineString, MultiLineString
+    """
+    if geom is None:
+        return 0
+    
+    geom_type = geom.geom_type
+    
+    if geom_type == 'Polygon':
+        # Un seul polygone
+        return len(geom.exterior.coords)
+    
+    elif geom_type == 'MultiPolygon':
+        # Plusieurs polygones
+        return sum(len(poly.exterior.coords) for poly in geom.geoms)
+    
+    elif geom_type == 'LineString':
+        # Une ligne
+        return len(geom.coords)
+    
+    elif geom_type == 'MultiLineString':
+        # Plusieurs lignes
+        return sum(len(line.coords) for line in geom.geoms)
+    
+    elif geom_type == 'Point':
+        # Un point = 1 vertex
+        return 1
+    
+    elif geom_type == 'MultiPoint':
+        # Plusieurs points
+        return len(geom.geoms)
+    
+    else:
+        # Type inconnu
+        return 0
+
+
 # === FONCTION PRINCIPALE DE TRAITEMENT ===
 def process_layer(layer_name, layer_config):
     """
@@ -153,11 +193,22 @@ def process_layer(layer_name, layer_config):
         
         # === 6. SIMPLIFICATION GÉOMÉTRIQUE ===
         logger.info(f"✂️  Simplification (tolérance: {SIMPLIFY_TOLERANCE})...")
-        original_vertices = gdf.geometry.apply(lambda g: len(g.exterior.coords)).sum()
+        
+        # Compter avant simplification
+        original_vertices = gdf.geometry.apply(count_vertices).sum()
+        
+        # Simplification
         gdf['geometry'] = gdf.geometry.simplify(SIMPLIFY_TOLERANCE, preserve_topology=True)
-        simplified_vertices = gdf.geometry.apply(lambda g: len(g.exterior.coords)).sum()
-        reduction = 100 * (1 - simplified_vertices / original_vertices)
-        logger.info(f"✅ Réduction de {reduction:.1f}% des vertices")
+        
+        # Compter après simplification
+        simplified_vertices = gdf.geometry.apply(count_vertices).sum()
+        
+        # Calculer la réduction
+        if original_vertices > 0:
+            reduction = 100 * (1 - simplified_vertices / original_vertices)
+            logger.info(f"✅ Réduction de {reduction:.1f}% des vertices ({original_vertices} → {simplified_vertices})")
+        else:
+            logger.info(f"✅ Simplification terminée")
         
         # === 7. NETTOYAGE DES ATTRIBUTS ===
         logger.info("🧹 Nettoyage des attributs...")

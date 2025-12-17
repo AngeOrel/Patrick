@@ -21,17 +21,17 @@ for directory in [RAW_DATA_DIR, PROCESSED_DATA_DIR, BACKUP_DIR, LOG_DIR]:
 # Définissez ici vos fichiers sources et leurs noms de sortie
 LAYERS_CONFIG = {
     "lots": {
-        "source_file": "lots_brut.shp",  # Nom du fichier dans data/raw/
+        "source_file": "LOTS.gpkg",  # Nom du fichier dans data/raw/
         "output_name": "lots.geojson",
         "description": "Parcelles de lots"
     },
     "ilots": {
-        "source_file": "ilots_brut.gpkg",
+        "source_file": "ILOTS.gpkg",
         "output_name": "ilots.geojson",
         "description": "Îlots urbains"
     },
     "polygonale": {
-        "source_file": "polygonale_brut.shp",
+        "source_file": "POLYGONALE_ZONE_ETUDE.gpkg",
         "output_name": "polygonale.geojson",
         "description": "Polygonale cadastrale"
     }
