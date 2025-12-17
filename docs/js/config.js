@@ -36,7 +36,7 @@ const CONFIG = {
   dataLayers: {
     lots: {
       name: 'Lots',
-      url: '../data/processed/lots.geojson',
+      url: '/data/processed/lots.geojson',
       style: {
         color: '#3388ff',
         weight: 2,
@@ -48,7 +48,7 @@ const CONFIG = {
     },
     ilots: {
       name: 'Îlots',
-      url: '../data/processed/ilots.geojson',
+      url: '/data/processed/ilots.geojson',
       style: {
         color: '#ff7800',
         weight: 2,
@@ -60,7 +60,7 @@ const CONFIG = {
     },
     polygonale: {
       name: 'Polygonale',
-      url: '../data/processed/polygonale.geojson',
+      url: '/data/processed/polygonale.geojson',
       style: {
         color: '#00ff00',
         weight: 3,
