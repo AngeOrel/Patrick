@@ -45,9 +45,9 @@ function initMap() {
 
 // === FONCTION DE GÉNÉRATION DES POPUPS ===
 function createPopupContent(properties, layerName) {
-  let html = `<div class="popup-content">`;
-  html += `<h3>${layerName}</h3>`;
-  html += `<table>`;
+  let html = '<div class="popup-content">';
+  html += '<h3>' + layerName + '</h3>';
+  html += '<table>';
 
   // Afficher tous les attributs sauf ceux commençant par '_'
   for (const [key, value] of Object.entries(properties)) {
@@ -62,11 +62,11 @@ function createPopupContent(properties, layerName) {
         displayValue = value.toLocaleString('fr-FR');
       }
       
-      html += `<tr><td><strong>${label}:</strong></td><td>${displayValue}</td></tr>`;
+      html += '<tr><td><strong>' + label + ':</strong></td><td>' + displayValue + '</td></tr>';
     }
   }
 
-  html += `</table></div>`;
+  html += '</table></div>';
   return html;
 }
 
@@ -100,19 +100,19 @@ function onEachFeature(feature, layer, layerConfig) {
 
 // === CHARGEMENT D'UNE COUCHE GEOJSON ===
 function loadGeoJSONLayer(layerId, layerConfig) {
-  console.log(`📥 Chargement de ${layerConfig.name}...`);
+  console.log('📥 Chargement de ' + layerConfig.name + '...');
 
   // Ajouter cache buster si activé
   let url = layerConfig.url;
   if (CONFIG.cacheBuster) {
     const timestamp = new Date().getTime();
-    url += `?v=${timestamp}`;
+    url += '?v=' + timestamp;
   }
 
   fetch(url)
     .then(response => {
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('HTTP error! status: ' + response.status);
       }
       return response.json();
     })
@@ -120,7 +120,7 @@ function loadGeoJSONLayer(layerId, layerConfig) {
       // Créer la couche Leaflet
       const geojsonLayer = L.geoJSON(data, {
         style: layerConfig.style,
-        onEachFeature: (feature, layer) => {
+        onEachFeature: function(feature, layer) {
           onEachFeature(feature, layer, layerConfig);
         }
       });
@@ -136,7 +136,7 @@ function loadGeoJSONLayer(layerId, layerConfig) {
       // Ajouter au contrôle des couches
       layerControls.addOverlay(geojsonLayer, layerConfig.name);
 
-      console.log(`✅ ${layerConfig.name} chargé (${data.features.length} entités)`);
+      console.log('✅ ' + layerConfig.name + ' chargé (' + data.features.length + ' entités)');
 
       // Zoomer sur l'étendue si c'est la première couche
       if (Object.keys(loadedLayers).length === 1) {
@@ -144,8 +144,8 @@ function loadGeoJSONLayer(layerId, layerConfig) {
       }
     })
     .catch(error => {
-      console.error(`❌ Erreur de chargement de ${layerConfig.name}:`, error);
-      alert(`Impossible de charger la couche ${layerConfig.name}`);
+      console.error('❌ Erreur de chargement de ' + layerConfig.name + ':', error);
+      alert('Impossible de charger la couche ' + layerConfig.name);
     });
 }
 
@@ -161,7 +161,7 @@ function filterLayer(layerId, attributeName, filterValue) {
   const layer = loadedLayers[layerId];
   if (!layer) return;
 
-  layer.eachLayer(sublayer => {
+  layer.eachLayer(function(sublayer) {
     const value = sublayer.feature.properties[attributeName];
     
     if (filterValue === '' || value == filterValue) {
@@ -179,7 +179,7 @@ function searchFeature(layerId, attributeName, searchTerm) {
 
   let found = false;
 
-  layer.eachLayer(sublayer => {
+  layer.eachLayer(function(sublayer) {
     const value = String(sublayer.feature.properties[attributeName] || '').toLowerCase();
     const search = searchTerm.toLowerCase();
 
@@ -198,32 +198,38 @@ function searchFeature(layerId, attributeName, searchTerm) {
   if (!found) {
     alert('Aucun résultat trouvé');
   }
-  }
-// === EXPORT DES DONNÉES VISIBLES ===
-function exportVisibleData(layerId, format = 'geojson') {
-const layer = loadedLayers[layerId];
-if (!layer) return;
-const features = [];
-layer.eachLayer(sublayer => {
-features.push(sublayer.feature);
-});
-const geojson = {
-type: 'FeatureCollection',
-features: features
-};
-// Télécharger
-const dataStr = JSON.stringify(geojson, null, 2);
-const dataBlob = new Blob([dataStr], { type: 'application/json' });
-const url = URL.createObjectURL(dataBlob);
-const link = document.createElement('a');
-link.href = url;
-link.download = ${layerId}_export.geojson;
-link.click();
-URL.revokeObjectURL(url);
 }
+
+// === EXPORT DES DONNÉES VISIBLES ===
+function exportVisibleData(layerId, format) {
+  format = format || 'geojson';
+  const layer = loadedLayers[layerId];
+  if (!layer) return;
+
+  const features = [];
+  layer.eachLayer(function(sublayer) {
+    features.push(sublayer.feature);
+  });
+
+  const geojson = {
+    type: 'FeatureCollection',
+    features: features
+  };
+
+  // Télécharger
+  const dataStr = JSON.stringify(geojson, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = layerId + '_export.geojson';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 // === INITIALISATION AU CHARGEMENT DE LA PAGE ===
 document.addEventListener('DOMContentLoaded', function() {
-console.log('🚀 Initialisation du WebSIG...');
-initMap();
-loadAllLayers();
+  console.log('🚀 Initialisation du WebSIG...');
+  initMap();
+  loadAllLayers();
 });
