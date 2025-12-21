@@ -1,12 +1,11 @@
 /**
  * Configuration du WebSIG
- * Centralisez ici tous les paramètres de votre carte
  */
 
 const CONFIG = {
   // === CARTE ===
   map: {
-    center: [5.3600, -4.0083], // Abidjan (latitude, longitude)
+    center: [5.3600, -4.0083], // Abidjan
     zoom: 12,
     minZoom: 10,
     maxZoom: 18
@@ -23,12 +22,6 @@ const CONFIG = {
       name: 'Satellite (Esri)',
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       attribution: '&copy; Esri'
-    },
-    // Votre orthophoto interne (à adapter selon votre hébergement)
-    orthophoto: {
-      name: 'Orthophoto interne',
-      url: 'https://votre-serveur.com/tiles/{z}/{x}/{y}.png', // À modifier
-      attribution: '&copy; Votre organisation'
     }
   },
 
@@ -36,7 +29,7 @@ const CONFIG = {
   dataLayers: {
     lots: {
       name: 'Lots',
-      url: '/data/processed/lots.geojson',
+      url: './data/processed/lots.geojson',
       style: {
         color: '#3388ff',
         weight: 2,
@@ -48,7 +41,7 @@ const CONFIG = {
     },
     ilots: {
       name: 'Îlots',
-      url: '/data/processed/ilots.geojson',
+      url: './data/processed/ilots.geojson',
       style: {
         color: '#ff7800',
         weight: 2,
@@ -60,7 +53,7 @@ const CONFIG = {
     },
     polygonale: {
       name: 'Polygonale',
-      url: '/data/processed/polygonale.geojson',
+      url: './data/processed/polygonale.geojson',
       style: {
         color: '#00ff00',
         weight: 3,
@@ -79,6 +72,5 @@ const CONFIG = {
   },
 
   // === GESTION DU CACHE ===
-  // Ajouter un timestamp pour forcer le rechargement
   cacheBuster: true
 };
