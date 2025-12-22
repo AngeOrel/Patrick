@@ -62,6 +62,18 @@ const CONFIG = {
       },
       visible: false,
       attribution: 'reference'
+    },
+    Lot_V: {
+      name: 'Lotissement Voidin',
+      url: './data/processed/LOTISSEMENT_APPROUVE.geojson',
+      style: {
+        color: '#959595ff',
+        weight: 3,
+        fillOpacity: 0.05,
+        fillColor: '#959595ff'
+      },
+      visible: false,
+      attribution: 'Support'
     }
   },
 
