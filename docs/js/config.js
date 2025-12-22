@@ -64,7 +64,7 @@ const CONFIG = {
       attribution: 'reference'
     },
     Lot_V: {
-      name: 'Lotissement Voidin',
+      name: 'Lotissement Voisin',
       url: './data/processed/LOTISSEMENT_APPROUVE.geojson',
       style: {
         color: '#959595ff',
@@ -72,7 +72,7 @@ const CONFIG = {
         fillOpacity: 0.05,
         fillColor: '#959595ff'
       },
-      visible: false,
+      visible: true,
       attribution: 'Support'
     }
   },

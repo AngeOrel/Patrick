@@ -98,7 +98,7 @@
         }
         
         // Afficher la date de dernière mise à jour
-        fetch('../data/processed/lots.geojson?v=' + Date.now())
+        fetch('./data/processed/lots.geojson?v=' + Date.now())
             .then(response => response.headers.get('last-modified'))
             .then(date => {
                 if (date) {
