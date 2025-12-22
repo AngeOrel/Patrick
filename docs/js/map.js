@@ -172,32 +172,87 @@ function filterLayer(layerId, attributeName, filterValue) {
   });
 }
 
-// === RECHERCHE PAR ATTRIBUT ===
-function searchFeature(layerId, attributeName, searchTerm) {
-  const layer = loadedLayers[layerId];
-  if (!layer) return;
+// === RECHERCHE PAR NUMÉRO DE LOT ===
+function searchByLotNumber(searchTerm) {
+  // Nettoyer le terme de recherche
+  searchTerm = searchTerm.trim();
+  
+  if (searchTerm === '') {
+    alert('Veuillez entrer un numéro de lot');
+    return;
+  }
 
   let found = false;
+  let foundLayer = null;
 
-  layer.eachLayer(function(sublayer) {
-    const value = String(sublayer.feature.properties[attributeName] || '').toLowerCase();
-    const search = searchTerm.toLowerCase();
-
-    if (value.includes(search)) {
-      sublayer.setStyle({ color: 'red', weight: 4 });
-      if (!found) {
-        map.fitBounds(sublayer.getBounds());
-        sublayer.openPopup();
-        found = true;
+  // Parcourir toutes les couches chargées
+  for (const [layerId, layer] of Object.entries(loadedLayers)) {
+    layer.eachLayer(function(sublayer) {
+      // Vérifier si la propriété NUM_LOTS existe
+      if (sublayer.feature.properties.NUM_LOTS !== undefined) {
+        const numLot = String(sublayer.feature.properties.NUM_LOTS).trim();
+        
+        // Comparaison exacte ou partielle
+        if (numLot === searchTerm || numLot.includes(searchTerm)) {
+          // Réinitialiser les autres couches
+          resetAllStyles();
+          
+          // Mettre en surbrillance
+          sublayer.setStyle({ 
+            color: '#FF0000', 
+            weight: 4,
+            fillOpacity: 0.7,
+            fillColor: '#FF0000'
+          });
+          
+          // Zoomer et ouvrir popup
+          if (!found) {
+            map.fitBounds(sublayer.getBounds(), { padding: [50, 50] });
+            sublayer.openPopup();
+            found = true;
+            foundLayer = sublayer;
+          }
+        }
       }
-    } else {
-      sublayer.setStyle(CONFIG.dataLayers[layerId].style);
-    }
-  });
+    });
+    
+    if (found) break; // Arrêter dès qu'on trouve
+  }
 
   if (!found) {
-    alert('Aucun résultat trouvé');
+    alert('Aucun lot trouvé avec le numéro : ' + searchTerm);
+    resetAllStyles(); // Réinitialiser en cas d'échec
   }
+  
+  return foundLayer;
+}
+
+// === FONCTION POUR RÉINITIALISER TOUS LES STYLES ===
+function resetAllStyles() {
+  for (const [layerId, layer] of Object.entries(loadedLayers)) {
+    layer.eachLayer(function(sublayer) {
+      sublayer.setStyle(CONFIG.dataLayers[layerId].style);
+    });
+  }
+}
+
+// === RECHERCHE AVANCÉE (optionnelle) ===
+function searchWithAutocomplete(searchTerm) {
+  const suggestions = [];
+  
+  // Collecter tous les numéros de lots
+  for (const [layerId, layer] of Object.entries(loadedLayers)) {
+    layer.eachLayer(function(sublayer) {
+      if (sublayer.feature.properties.NUM_LOTS !== undefined) {
+        const numLot = String(sublayer.feature.properties.NUM_LOTS).trim();
+        if (numLot.includes(searchTerm)) {
+          suggestions.push(numLot);
+        }
+      }
+    });
+  }
+  
+  return suggestions;
 }
 
 // === EXPORT DES DONNÉES VISIBLES ===

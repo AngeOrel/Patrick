@@ -69,7 +69,7 @@ const CONFIG = {
       style: {
         color: '#959595ff',
         weight: 3,
-        fillOpacity: 0.05,
+        fillOpacity: 0.02,
         fillColor: '#959595ff'
       },
       visible: true,
