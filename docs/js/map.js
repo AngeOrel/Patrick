@@ -120,8 +120,10 @@ function loadMBTilesLayer(layerId, layerConfig) {
       return response.arrayBuffer();
     })
     .then(arrayBuffer => {
-      // Initialiser sql.js
-      return initSqlJs().then(SQL => {
+      // Initialiser sql.js en indiquant où charger le fichier .wasm (CDN)
+      return initSqlJs({
+        locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+      }).then(SQL => {
         // Ouvrir la base de données MBTiles
         const db = new SQL.Database(new Uint8Array(arrayBuffer));
         
