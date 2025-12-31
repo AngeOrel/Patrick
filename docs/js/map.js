@@ -140,45 +140,36 @@ function loadMBTilesLayer(layerId, layerConfig) {
 
       console.log('📋 Métadonnées MBTiles:', metadata);
 
-      // Créer une couche custom qui récupère les tuiles depuis la BD
-      const tileLayer = L.tileLayer.canvas({
-        async drawTile(canvas, tilePoint, zoom) {
-          const x = tilePoint.x;
-          const y = tilePoint.y;
-          const z = zoom;
-
-          // Formule pour inverser Y (TMS vs Web Mercator)
-          const yInverted = (Math.pow(2, z) - 1) - y;
+      // Créer une couche TileLayer compatible Leaflet 1.x qui lit les tuiles depuis la BD
+      const MBTilesLayer = L.TileLayer.extend({
+        getTileUrl: function(coords) {
+          const z = coords.z;
+          const x = coords.x;
+          // Conversion TMS Y (MBTiles utilise TMS, Leaflet utilise XYZ)
+          const tmsY = Math.pow(2, z) - coords.y - 1;
 
           try {
-            // Requête SQL pour récupérer la tuile
-            const query = `SELECT tile_data FROM tiles WHERE zoom_level = ${z} AND tile_column = ${x} AND tile_row = ${yInverted}`;
-            const result = db.exec(query);
+            const result = db.exec(
+              `SELECT tile_data FROM tiles WHERE zoom_level = ${z} AND tile_column = ${x} AND tile_row = ${tmsY}`
+            );
 
             if (result.length > 0 && result[0].values.length > 0) {
               const tileData = result[0].values[0][0];
-
-              // Convertir le blob en image
               const blob = new Blob([tileData], { type: 'image/png' });
-              const url = URL.createObjectURL(blob);
-              const img = new Image();
-
-              img.onload = () => {
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, 256, 256);
-                URL.revokeObjectURL(url);
-              };
-
-              img.onerror = () => {
-                console.warn('Impossible de charger la tuile:', z, x, y);
-              };
-
-              img.src = url;
+              return URL.createObjectURL(blob);
             }
-          } catch (error) {
-            console.warn('Erreur lecture tuile:', error);
+          } catch (e) {
+            console.error(`Erreur lecture tuile ${z}/${x}/${tmsY}:`, e);
           }
-        },
+
+          return '';
+        }
+      });
+
+      // Créer et configurer la couche
+      const tileLayer = new MBTilesLayer({
+        minZoom: parseInt(metadata.minzoom) || 14,
+        maxZoom: parseInt(metadata.maxzoom) || 19,
         attribution: layerConfig.attribution
       });
 
