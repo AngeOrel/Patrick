@@ -25,6 +25,17 @@ const CONFIG = {
     }
   },
 
+  // === COUCHES ADDITIONNELLES (OVERLAYS) ===
+  overlayLayers: {
+    orthophoto: {
+      name: 'Ortho-Photo',
+      url: 'https://efdxgfjxblbdqqrieymn.supabase.co/storage/v1/object/public/Ortho/14-19.mbtiles',
+      type: 'mbtiles',
+      attribution: 'Ortho-Photo',
+      visible: false
+    }
+  },
+
   // === COUCHES DE DONNÉES ===
   dataLayers: {
     lots: {

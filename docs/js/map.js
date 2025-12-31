@@ -37,6 +37,15 @@ function initMap() {
     position: 'topright'
   }).addTo(map);
 
+  // Charger les overlays additionnels (ortho-photo, etc.)
+  if (CONFIG.overlayLayers) {
+    for (const [layerId, layerConfig] of Object.entries(CONFIG.overlayLayers)) {
+      if (layerConfig.type === 'mbtiles') {
+        loadMBTilesLayer(layerId, layerConfig);
+      }
+    }
+  }
+
   // Échelle
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
@@ -96,6 +105,30 @@ function onEachFeature(feature, layer, layerConfig) {
       map.fitBounds(e.target.getBounds());
     }
   });
+}
+
+// === CHARGEMENT D'UNE COUCHE MBTILES ===
+function loadMBTilesLayer(layerId, layerConfig) {
+  console.log('📥 Chargement de ' + layerConfig.name + ' (MBTiles)...');
+
+  // Créer une couche tile depuis le fichier MBTiles
+  const tileLayer = L.tileLayer.mbtiles(layerConfig.url, {
+    attribution: layerConfig.attribution,
+    maxZoom: 20
+  });
+
+  // Stocker la couche
+  loadedLayers[layerId] = tileLayer;
+
+  // Ajouter à la carte si visible par défaut
+  if (layerConfig.visible) {
+    tileLayer.addTo(map);
+  }
+
+  // Ajouter au contrôle des couches comme overlay
+  layerControls.addOverlay(tileLayer, layerConfig.name);
+
+  console.log('✅ ' + layerConfig.name + ' chargé');
 }
 
 // === CHARGEMENT D'UNE COUCHE GEOJSON ===
