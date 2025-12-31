@@ -119,81 +119,81 @@ function loadMBTilesLayer(layerId, layerConfig) {
       }
       return response.arrayBuffer();
     })
-    .then(arrayBuffer => {
+    .then(async arrayBuffer => {
       // Initialiser sql.js en indiquant où charger le fichier .wasm (CDN)
-      return initSqlJs({
+      const SQL = await initSqlJs({
         locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-      }).then(SQL => {
-        // Ouvrir la base de données MBTiles
-        const db = new SQL.Database(new Uint8Array(arrayBuffer));
-        
-        // Récupérer les métadonnées
-        const metadata = {};
-        const metaQuery = db.exec('SELECT name, value FROM metadata');
-        if (metaQuery.length > 0) {
-          for (let i = 0; i < metaQuery[0].values.length; i++) {
-            const [name, value] = metaQuery[0].values[i];
-            metadata[name] = value;
-          }
-        }
-        
-        console.log('📋 Métadonnées MBTiles:', metadata);
-        
-        // Créer une couche custom qui récupère les tuiles depuis la BD
-        const tileLayer = L.tileLayer.canvas({
-          async drawTile(canvas, tilePoint, zoom) {
-            const x = tilePoint.x;
-            const y = tilePoint.y;
-            const z = zoom;
-            
-            // Formule pour inverser Y (TMS vs Web Mercator)
-            const yInverted = (Math.pow(2, z) - 1) - y;
-            
-            try {
-              // Requête SQL pour récupérer la tuile
-              const query = `SELECT tile_data FROM tiles WHERE zoom_level = ${z} AND tile_column = ${x} AND tile_row = ${yInverted}`;
-              const result = db.exec(query);
-              
-              if (result.length > 0 && result[0].values.length > 0) {
-                const tileData = result[0].values[0][0];
-                
-                // Convertir le blob en image
-                const blob = new Blob([tileData], { type: 'image/png' });
-                const url = URL.createObjectURL(blob);
-                const img = new Image();
-                
-                img.onload = () => {
-                  const ctx = canvas.getContext('2d');
-                  ctx.drawImage(img, 0, 0, 256, 256);
-                  URL.revokeObjectURL(url);
-                };
-                
-                img.onerror = () => {
-                  console.warn('Impossible de charger la tuile:', z, x, y);
-                };
-                
-                img.src = url;
-              }
-            } catch (error) {
-              console.warn('Erreur lecture tuile:', error);
-            }
-          },
-          attribution: layerConfig.attribution
-        });
-        
-        // Stocker la couche
-        loadedLayers[layerId] = tileLayer;
-        
-        // Ajouter à la carte si visible par défaut
-        if (layerConfig.visible) {
-          tileLayer.addTo(map);
-        }
-        
-        // Ajouter au contrôle des couches
-        layerControls.addOverlay(tileLayer, layerConfig.name);
-        
-        console.log('✅ ' + layerConfig.name + ' chargé');
       });
+
+      // Ouvrir la base de données MBTiles
+      const db = new SQL.Database(new Uint8Array(arrayBuffer));
+      
+      // Récupérer les métadonnées
+      const metadata = {};
+      const metaQuery = db.exec('SELECT name, value FROM metadata');
+      if (metaQuery.length > 0) {
+        for (let i = 0; i < metaQuery[0].values.length; i++) {
+          const [name, value] = metaQuery[0].values[i];
+          metadata[name] = value;
+        }
+      }
+
+      console.log('📋 Métadonnées MBTiles:', metadata);
+
+      // Créer une couche custom qui récupère les tuiles depuis la BD
+      const tileLayer = L.tileLayer.canvas({
+        async drawTile(canvas, tilePoint, zoom) {
+          const x = tilePoint.x;
+          const y = tilePoint.y;
+          const z = zoom;
+
+          // Formule pour inverser Y (TMS vs Web Mercator)
+          const yInverted = (Math.pow(2, z) - 1) - y;
+
+          try {
+            // Requête SQL pour récupérer la tuile
+            const query = `SELECT tile_data FROM tiles WHERE zoom_level = ${z} AND tile_column = ${x} AND tile_row = ${yInverted}`;
+            const result = db.exec(query);
+
+            if (result.length > 0 && result[0].values.length > 0) {
+              const tileData = result[0].values[0][0];
+
+              // Convertir le blob en image
+              const blob = new Blob([tileData], { type: 'image/png' });
+              const url = URL.createObjectURL(blob);
+              const img = new Image();
+
+              img.onload = () => {
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 256, 256);
+                URL.revokeObjectURL(url);
+              };
+
+              img.onerror = () => {
+                console.warn('Impossible de charger la tuile:', z, x, y);
+              };
+
+              img.src = url;
+            }
+          } catch (error) {
+            console.warn('Erreur lecture tuile:', error);
+          }
+        },
+        attribution: layerConfig.attribution
+      });
+
+      // Stocker la couche
+      loadedLayers[layerId] = tileLayer;
+
+      // Ajouter à la carte si visible par défaut
+      if (layerConfig.visible) {
+        tileLayer.addTo(map);
+      }
+
+      // Ajouter au contrôle des couches
+      layerControls.addOverlay(tileLayer, layerConfig.name);
+
+      console.log('✅ ' + layerConfig.name + ' chargé');
     })
     .catch(error => {
       console.error('❌ Erreur de chargement de ' + layerConfig.name + ':', error);
