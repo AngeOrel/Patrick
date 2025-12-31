@@ -111,10 +111,16 @@ function onEachFeature(feature, layer, layerConfig) {
 function loadMBTilesLayer(layerId, layerConfig) {
   console.log('📥 Chargement de ' + layerConfig.name + ' (MBTiles)...');
 
-  // Créer une couche tile depuis le fichier MBTiles
-  const tileLayer = L.tileLayer.mbtiles(layerConfig.url, {
+  // Initialiser PMTiles
+  const pmtilesUrl = layerConfig.url;
+  const protocol = new pmtiles.Protocol();
+  leaflet.protocol.registerProtocol(protocol);
+
+  // Créer une couche tile depuis le fichier MBTiles via PMTiles
+  const tileLayer = L.tileLayer('pmtiles://' + pmtilesUrl + '/{z}/{x}/{y}', {
     attribution: layerConfig.attribution,
-    maxZoom: 20
+    maxZoom: 20,
+    tms: false
   });
 
   // Stocker la couche
