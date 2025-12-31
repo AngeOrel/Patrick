@@ -111,30 +111,24 @@ function onEachFeature(feature, layer, layerConfig) {
 function loadMBTilesLayer(layerId, layerConfig) {
   console.log('📥 Chargement de ' + layerConfig.name + ' (MBTiles)...');
 
-  // Initialiser PMTiles
-  const pmtilesUrl = layerConfig.url;
-  const protocol = new pmtiles.Protocol();
-  leaflet.protocol.registerProtocol(protocol);
+  try {
+    // Créer une couche tile depuis le fichier MBTiles via PMTiles
+    const tileLayer = new L.PMTiles(layerConfig.url).addTo(map);
+    
+    // Configurer les options
+    tileLayer.setOpacity(1);
+    
+    // Stocker la couche
+    loadedLayers[layerId] = tileLayer;
 
-  // Créer une couche tile depuis le fichier MBTiles via PMTiles
-  const tileLayer = L.tileLayer('pmtiles://' + pmtilesUrl + '/{z}/{x}/{y}', {
-    attribution: layerConfig.attribution,
-    maxZoom: 20,
-    tms: false
-  });
+    // Ajouter au contrôle des couches comme overlay
+    layerControls.addOverlay(tileLayer, layerConfig.name);
 
-  // Stocker la couche
-  loadedLayers[layerId] = tileLayer;
-
-  // Ajouter à la carte si visible par défaut
-  if (layerConfig.visible) {
-    tileLayer.addTo(map);
+    console.log('✅ ' + layerConfig.name + ' chargé');
+  } catch (error) {
+    console.error('❌ Erreur de chargement de ' + layerConfig.name + ':', error);
+    alert('Impossible de charger la couche ' + layerConfig.name);
   }
-
-  // Ajouter au contrôle des couches comme overlay
-  layerControls.addOverlay(tileLayer, layerConfig.name);
-
-  console.log('✅ ' + layerConfig.name + ' chargé');
 }
 
 // === CHARGEMENT D'UNE COUCHE GEOJSON ===
